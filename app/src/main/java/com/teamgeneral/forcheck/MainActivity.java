@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
@@ -24,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -55,8 +57,14 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
     private int PERMISSION_CODE = 1;
     private String cityName;
-    public TextView next_to_forecast;
+   // public TextView next_to_forecast;
     private TextView tv_time;
+    //
+    private AdaptorF adaptorF;
+    private ArrayList<RvModel2> ForecastArrayList;
+    private RecyclerView rv_weather2;
+
+    //arraylist
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,12 +83,28 @@ public class MainActivity extends AppCompatActivity {
         image_view_search = (ImageView) findViewById(R.id.image_view_search);
         image_icon = (ImageView) findViewById(R.id.image_icon);
         rv_weather = (RecyclerView) findViewById(R.id.rv_weather);
-        next_to_forecast=(TextView)findViewById(R.id.next_to_forecast);
+
         tv_time=(TextView)findViewById(R.id.tv_time);
+        rv_weather2=(RecyclerView)findViewById(R.id.rv_weather2);
+
+
         //arraylist
         weatherArraylist = new ArrayList<>();
         adaptorR = new AdaptorR(this, weatherArraylist);
         rv_weather.setAdapter(adaptorR);
+        //forecast 7 days
+        LinearLayoutManager linearLayoutManager=new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);
+        rv_weather2.setLayoutManager(linearLayoutManager);
+        ForecastArrayList=new ArrayList<>();
+
+//        ForecastArrayList.add(new RvModel2("22","12","image","23","timessdfj"));
+//        ForecastArrayList.add(new RvModel2("22","12","image","23","timessdfj"));
+//        ForecastArrayList.add(new RvModel2("22","12","image","23","timessdfj"));
+//        ForecastArrayList.add(new RvModel2("22","12","image","23","timessdfj"));
+        adaptorF=new AdaptorF(this,ForecastArrayList);
+        rv_weather2.setAdapter(adaptorF);
+
+
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);//initialize
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -95,14 +119,8 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
-        next_to_forecast.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent=new Intent(MainActivity.this,Tommrow.class);
-                startActivity(intent);
+        //delete
 
-            }
-        });
 
 
 
@@ -115,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Please enter a city name", Toast.LENGTH_SHORT).show();
                 } else {
                     getWeatherInfo(city);
+                    getWeatherInfoo(city);
                 }
             }
         });
@@ -130,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
                     double longitude = location.getLongitude();
                     cityName = getCityName(latitude, longitude);
                     getWeatherInfo(cityName);
+                    getWeatherInfoo(cityName);
                     locationManager.removeUpdates(this);
                 }
 
@@ -152,11 +172,15 @@ public class MainActivity extends AppCompatActivity {
                 double longitude = lastKnownLocation.getLongitude();
                 cityName = getCityName(latitude, longitude);
                 getWeatherInfo(cityName);
+                getWeatherInfoo(cityName);
+
             } else {
                 Toast.makeText(this, "Failed to get location.", Toast.LENGTH_SHORT).show();
             }
         }
     }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -201,10 +225,12 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(JSONObject response) {
 
                 weatherArraylist.clear();
+                //added
+                ForecastArrayList.clear();
                 try {
                     String temperature = response.getJSONObject("current").getString("temp_c");
                     textview_temp.setText(temperature + "℃");
-                    int isDay = response.getJSONObject("current").getInt("is_day");
+                    //int isDay = response.getJSONObject("current").getInt("is_day");
                     String condition = response.getJSONObject("current").getJSONObject("condition").getString("text");
                     String conditionIcon = response.getJSONObject("current").getJSONObject("condition").getString("icon");
                     Picasso.get().load("http:".concat(conditionIcon)).into(image_icon);
@@ -214,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
                     humidity_percent.setText(humid);
                     String winds=response.getJSONObject("current").getString("wind_mph");
                     text_wind.setText(winds);
+                    //int rainn = response.getJSONObject("current").getInt("daily_will_it_rain");
                     String latt=response.getJSONObject("location").getString("lat");
                     String longg=response.getJSONObject("location").getString("lon");
                     long_text.setText("H: "+ latt+"L: "+longg);
@@ -221,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
                     rain_percent.setText(rain);
                     String times=response.getJSONObject("location").getString("localtime");
                     tv_time.setText(times);
+
 
 //                    if (isDay == 1) {
 //                        //morning
@@ -232,6 +260,13 @@ public class MainActivity extends AppCompatActivity {
                     JSONObject forecastO = forecastObj.getJSONArray("forecastday").getJSONObject(0);
                     JSONArray hourArray = forecastO.getJSONArray("hour");
 
+                    //forcast object
+//                    JSONObject forecast1=forecastObj.getJSONArray("forecastday").getJSONObject(0);
+//                    JSONArray forecastArray=forecast1.getJSONArray("day");
+                    //JSONArray tempArray = forecastObj.getJSONArray("day");
+
+
+
                     for (int i = 0; i < hourArray.length(); i++) {
                         JSONObject hourObj = hourArray.getJSONObject(i);
                         String time = hourObj.getString("time");
@@ -240,8 +275,31 @@ public class MainActivity extends AppCompatActivity {
                         String wind = hourObj.getString("wind_kph");
 
                         weatherArraylist.add(new RvModel(time,temper,img,wind));
+                        //ForecastArrayList.add(new RvModel2(time,temper,img,wind));
                     }
                     adaptorR.notifyDataSetChanged();
+                    //adapotr2
+                    //adaptorF.notifyDataSetChanged();
+                    //forecast for loop
+                    for(int i=0;i<=6;i++){
+
+//                        JSONObject dayObj= tempArray.getJSONObject(i);
+//                        String day=dayObj.getString("time");
+////                        String temp=dayObj.getJSONObject("day").getString("temp_c");
+////                        String temp1=dayObj.getJSONObject("hour").getString("temp_f");
+////                        String imgc=dayObj.getJSONObject("condition").getString("icon");
+////                        String status=dayObj.getJSONObject("condition").getString("text");
+//                        String temp = dayObj.getJSONObject("day").getString("avgtemp_c");
+//                        String temp1 = dayObj.getJSONObject("day").getString("avgtemp_f");
+//                        String imgc = dayObj.getJSONObject("day").getJSONObject("condition").getString("icon");
+//                        String status = dayObj.getJSONObject("day").getJSONObject("condition").getString("text");
+
+
+
+                        //ForecastArrayList.add(new RvModel2(day,temp,imgc,temp1,status));
+
+                    }
+                    //adaptorF.notifyDataSetChanged();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -254,6 +312,44 @@ public class MainActivity extends AppCompatActivity {
         });
         requestQueue.add(jsonObjectRequest);
     }
+    private void getWeatherInfoo(String cityName) {
+        String url = "http://api.weatherapi.com/v1/forecast.json?key=2741fd30446a4739a05133333230307&q=" + cityName + "&days=7&aqi=no&alerts=no";
+        tv_city.setText(cityName);
+        RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                ForecastArrayList.clear();
+                try {
+                    JSONObject forecastObj = response.getJSONObject("forecast");
+                    JSONArray forecastdayArray = forecastObj.getJSONArray("forecastday");
+                    for (int i = 0; i < forecastdayArray.length(); i++) {
+                        JSONObject forecastdayObj = forecastdayArray.getJSONObject(i);
+                        String date = forecastdayObj.getString("date");
+                        JSONObject dayObj = forecastdayObj.getJSONObject("day");
+                        String maxTemp = dayObj.getString("maxtemp_c");
+                        String minTemp = dayObj.getString("mintemp_c");
+                        String img = dayObj.getJSONObject("condition").getString("icon");
+                        String status=dayObj.getJSONObject("condition").get("text").toString();
+                        String wind = dayObj.getString("maxwind_kph");
+                        ForecastArrayList.add(new RvModel2(date, img,maxTemp, status,wind));
+                    }
+
+                    adaptorF.notifyDataSetChanged();
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, "Please enter a valid city name", Toast.LENGTH_SHORT).show();
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
+    }
+
 
 }
 
