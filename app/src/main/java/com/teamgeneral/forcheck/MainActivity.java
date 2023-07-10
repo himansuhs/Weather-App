@@ -17,6 +17,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -43,6 +44,7 @@ import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -63,6 +65,10 @@ public class MainActivity extends AppCompatActivity {
     private AdaptorF adaptorF;
     private ArrayList<RvModel2> ForecastArrayList;
     private RecyclerView rv_weather2;
+    //sunsrise animation
+    private TextView sunrise_time,sunset_time;
+    private LottieAnimationView animationView1;
+    private Handler handler;
 
     //arraylist
 
@@ -83,6 +89,10 @@ public class MainActivity extends AppCompatActivity {
         image_view_search = (ImageView) findViewById(R.id.image_view_search);
         image_icon = (ImageView) findViewById(R.id.image_icon);
         rv_weather = (RecyclerView) findViewById(R.id.rv_weather);
+        //new
+        sunrise_time=(TextView)findViewById(R.id.sunrise_time);
+        sunset_time=(TextView)findViewById(R.id.sunset_time);
+        animationView1=(LottieAnimationView)findViewById(R.id.animationView1);
 
         tv_time=(TextView)findViewById(R.id.tv_time);
         rv_weather2=(RecyclerView)findViewById(R.id.rv_weather2);
@@ -103,6 +113,8 @@ public class MainActivity extends AppCompatActivity {
 //        ForecastArrayList.add(new RvModel2("22","12","image","23","timessdfj"));
         adaptorF=new AdaptorF(this,ForecastArrayList);
         rv_weather2.setAdapter(adaptorF);
+
+
 
 
 
@@ -134,9 +146,43 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     getWeatherInfo(city);
                     getWeatherInfoo(city);
+                   getWeatherAstro(city);
                 }
             }
         });
+        handler = new Handler();
+        updateAnimation();
+
+        // Schedule the update every second (1000 milliseconds)
+        handler.postDelayed(animationRunnable, 0);
+    }
+    private Runnable animationRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateAnimation();
+            handler.postDelayed(this, 0); // Run again after 1 second
+        }
+    };
+
+    private void updateAnimation() {
+        // Get the current time
+        Calendar calendar = Calendar.getInstance();
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = calendar.get(Calendar.MINUTE);
+
+        // Set the progress of the animation based on the current time
+        int totalMinutes = currentHour * 60 + currentMinute;
+        int totalMinutesInDay = 24 * 60;
+
+        float progress = (float) totalMinutes / totalMinutesInDay;
+        animationView1.setProgress(progress);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Remove the callback to stop the periodic update when the activity is destroyed
+        handler.removeCallbacks(animationRunnable);
     }
 
     private void getLocation() {
@@ -150,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
                     cityName = getCityName(latitude, longitude);
                     getWeatherInfo(cityName);
                     getWeatherInfoo(cityName);
+                    getWeatherAstro(cityName);
                     locationManager.removeUpdates(this);
                 }
 
@@ -173,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
                 cityName = getCityName(latitude, longitude);
                 getWeatherInfo(cityName);
                 getWeatherInfoo(cityName);
+                getWeatherAstro(cityName);
 
             } else {
                 Toast.makeText(this, "Failed to get location.", Toast.LENGTH_SHORT).show();
@@ -237,17 +285,21 @@ public class MainActivity extends AppCompatActivity {
 
                     text_view_condition.setText(condition);
                     String humid = response.getJSONObject("current").getString("humidity");
-                    humidity_percent.setText(humid);
+                    humidity_percent.setText(humid+"%");
                     String winds=response.getJSONObject("current").getString("wind_mph");
-                    text_wind.setText(winds);
-                    //int rainn = response.getJSONObject("current").getInt("daily_will_it_rain");
+                    text_wind.setText(winds+"Km/h");
+                    //int rainn = response.getJSONObject("day").getInt("daily_will_it_rain");
                     String latt=response.getJSONObject("location").getString("lat");
                     String longg=response.getJSONObject("location").getString("lon");
-                    long_text.setText("H: "+ latt+"L: "+longg);
+                    long_text.setText("H: "+ latt+" L: "+longg);
                     String rain=response.getJSONObject("current").getString("cloud");
-                    rain_percent.setText(rain);
+                    rain_percent.setText(rain+"%");
                     String times=response.getJSONObject("location").getString("localtime");
                     tv_time.setText(times);
+//                    String Sunrise=response.getJSONObject("astro").getString("sunrise");
+//                    sunrise_time.setText(Sunrise);
+
+
 
 
 //                    if (isDay == 1) {
@@ -264,6 +316,12 @@ public class MainActivity extends AppCompatActivity {
 //                    JSONObject forecast1=forecastObj.getJSONArray("forecastday").getJSONObject(0);
 //                    JSONArray forecastArray=forecast1.getJSONArray("day");
                     //JSONArray tempArray = forecastObj.getJSONArray("day");
+                    //astro
+//                    JSONArray astroArray=forecastO.getJSONArray("astro");
+//                    JSONObject astroobj=astroArray.getJSONObject(0);
+//                    String Sunrise=astroobj.getString("sunrise");
+//                    sunrise_time.setText(Sunrise);
+
 
 
 
@@ -323,6 +381,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject forecastObj = response.getJSONObject("forecast");
                     JSONArray forecastdayArray = forecastObj.getJSONArray("forecastday");
+
+
                     for (int i = 0; i < forecastdayArray.length(); i++) {
                         JSONObject forecastdayObj = forecastdayArray.getJSONObject(i);
                         String date = forecastdayObj.getString("date");
@@ -349,6 +409,39 @@ public class MainActivity extends AppCompatActivity {
         });
         requestQueue.add(jsonObjectRequest);
     }
+    //astro
+
+
+    private void getWeatherAstro(String cityName) {
+        String url = "http://api.weatherapi.com/v1/forecast.json?key=2741fd30446a4739a05133333230307&q=" + cityName + "&days=1&aqi=no&alerts=no";
+        tv_city.setText(cityName);
+        RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONObject forecastObj = response.getJSONObject("forecast");
+                    JSONArray forecastdayArray = forecastObj.getJSONArray("forecastday");
+                    JSONObject forecastDayObj = forecastdayArray.getJSONObject(0);
+                    JSONObject astroObj = forecastDayObj.getJSONObject("astro");
+                    String sunrise = astroObj.getString("sunrise");
+                    sunrise_time.setText(sunrise);
+                    String sunset = astroObj.getString("sunset");
+                    sunset_time.setText(sunset);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, "Please enter a valid city name", Toast.LENGTH_SHORT).show();
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
+    }
+
+
 
 
 }

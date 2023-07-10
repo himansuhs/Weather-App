@@ -269,7 +269,7 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
                     android:layout_weight="1"
-                    android:text="Today's Weather Forecast"
+                    android:text="Hourly Forecast"
                     android:textStyle="bold"
                     android:textSize="20sp"/>
 
@@ -290,19 +290,37 @@
                 android:paddingEnd="10dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 />
+            <TextView
+                android:id="@+id/text_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:layout_weight="1"
+                android:text="Daily Forecast"
+                android:textStyle="bold"
+                android:layout_marginLeft="12dp"
+                android:layout_below="@+id/rv_weather"
+                android:textSize="20sp"/>
+
             <RelativeLayout
+                android:id="@+id/linear_layout4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/background_2"
+
                 android:layout_margin="10dp"
                 android:scrollbarSize="30dp"
-                android:layout_below="@+id/rv_weather">
+
+                android:layout_below="@+id/text_1">
+
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:id="@+id/rv_weather2"
                     android:clipToPadding="false"
                     android:paddingStart="8dp"
+                    android:elevation="10dp"
                     android:paddingEnd="8dp"
                     android:nestedScrollingEnabled="true"
                     />
@@ -310,6 +328,62 @@
 
 
             </RelativeLayout>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="225dp"
+                android:background="@drawable/background_2"
+                android:layout_below="@+id/linear_layout4"
+
+                android:layout_margin="10dp"
+                android:scrollbarSize="30dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sunrise and Sunset"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginTop="10dp"/>
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/animationView1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    app:lottie_autoPlay="true"
+                    app:lottie_loop="true"
+                    app:lottie_rawRes="@raw/sunrise"
+                    android:layout_marginBottom="30dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@+id/animationView1"
+                    android:layout_marginBottom="-26dp"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:text="Sunrise"
+                        android:layout_weight="1"
+                        android:id="@+id/sunrise_time"
+
+                        android:textColor="@color/white"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sunset"
+                        android:id="@+id/sunset_time"
+                        android:textColor="@color/white"
+                        android:textSize="16sp" />
+                </LinearLayout>
+            </RelativeLayout>
+
+
 
 
 
